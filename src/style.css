@@ -1,0 +1,317 @@
+:root {
+  --cream: #f3e7cf;
+  --cream-2: #efe0c4;
+  --ink: #20180f;
+  --ink-soft: #5a4a39;
+  --mandarijn: #e8622a;
+  --mandarijn-dark: #c64e1d;
+  --veld: #6f8f5f;
+  --line: rgba(32, 24, 15, 0.14);
+  --lcd-bg: linear-gradient(#251f17, #15110c);
+  --lcd-glow: #ffcf85;
+  --metal: linear-gradient(160deg, #f7eedb 0%, #ecdcbe 48%, #e2cfac 100%);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #e3d4b6;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  color: var(--ink);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#scene {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  cursor: grab;
+}
+#scene:active { cursor: grabbing; }
+
+/* film grain + vignette: alles lijkt een gefotografeerd fysiek model */
+#fx {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  box-shadow: inset 0 0 180px rgba(24, 14, 4, 0.55), inset 0 0 60px rgba(24, 14, 4, 0.25);
+}
+#fx::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.hidden { display: none !important; }
+.mono { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+
+/* tactiele knoppen-basis (geborsteld metaal, opstaande rand) */
+.icon-btn {
+  height: 40px;
+  min-width: 40px;
+  padding: 0 12px;
+  border: 1px solid #b49b74;
+  border-radius: 11px;
+  background: var(--metal);
+  color: var(--ink);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -2px 3px rgba(120, 90, 50, 0.25),
+    0 3px 0 #b49b74, 0 6px 10px -4px rgba(40, 28, 15, 0.5);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.icon-btn:active {
+  transform: translateY(3px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 0 #b49b74, 0 2px 6px -3px rgba(40, 28, 15, 0.5);
+}
+.icon-btn.muted #wave1, .icon-btn.muted #wave2 { opacity: 0.18; }
+
+#corner {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 40;
+}
+
+/* HUD: kleine ingebouwde LCD-meters in een metalen bezel */
+#hud {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.hud-row { display: flex; gap: 8px; }
+.chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 13px 8px;
+  border-radius: 11px;
+  background: var(--metal);
+  border: 1px solid #b49b74;
+  min-width: 66px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 3px 0 #b49b74,
+    0 6px 12px -5px rgba(40, 28, 15, 0.5);
+}
+.chip-label {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+.chip-val {
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--lcd-bg);
+  color: var(--lcd-glow);
+  text-shadow: 0 0 8px rgba(255, 180, 90, 0.55);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+#progress-wrap {
+  position: relative;
+  width: 226px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--lcd-bg);
+  border: 1px solid #0d0a07;
+  overflow: hidden;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7), 0 2px 0 rgba(255, 255, 255, 0.25);
+}
+#progress-bar {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background: linear-gradient(#94ba78, #6c9152);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -3px 6px rgba(0, 0, 0, 0.25);
+  transition: width 0.25s ease;
+}
+#progress-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff3df;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* overlays */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(120% 120% at 50% 0%, rgba(233, 220, 192, 0.4), rgba(180, 158, 120, 0.82));
+  backdrop-filter: blur(3px);
+}
+
+/* embossed fysiek paneel met schroefjes in de hoeken */
+.card {
+  position: relative;
+  width: min(440px, 100%);
+  background: var(--metal);
+  border: 1px solid #bfa67e;
+  border-radius: 22px;
+  padding: 40px 34px 32px;
+  text-align: center;
+  box-shadow: inset 0 2px 1px rgba(255, 255, 255, 0.85), inset 0 -4px 10px rgba(120, 90, 50, 0.22),
+    0 28px 56px -20px rgba(40, 28, 15, 0.65), 0 3px 0 rgba(255, 255, 255, 0.5);
+  animation: rise 0.5s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18px 18px, #c3ad88 0 2.5px, rgba(0, 0, 0, 0.28) 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at calc(100% - 18px) 18px, #c3ad88 0 2.5px, rgba(0, 0, 0, 0.28) 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at 18px calc(100% - 18px), #c3ad88 0 2.5px, rgba(0, 0, 0, 0.28) 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at calc(100% - 18px) calc(100% - 18px), #c3ad88 0 2.5px, rgba(0, 0, 0, 0.28) 2.5px 4px, transparent 4.5px);
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.brand {
+  font-size: 12px;
+  letter-spacing: 0.42em;
+  font-weight: 700;
+  color: var(--mandarijn);
+  margin-bottom: 16px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.title {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 78px;
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 2px 3px rgba(40, 28, 15, 0.25);
+}
+.title-sm {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 40px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.tag { margin-top: 14px; font-size: 17px; font-weight: 500; color: var(--ink); }
+.how {
+  margin-top: 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  max-width: 340px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* tactiele 3D-drukknop */
+.primary {
+  position: relative;
+  margin-top: 26px;
+  width: 100%;
+  height: 56px;
+  border: 1px solid #a83d12;
+  border-radius: 14px;
+  background: linear-gradient(#f0743c, #d9521f);
+  color: #fff;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-shadow: 0 1px 1px rgba(120, 40, 10, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -3px 4px rgba(120, 40, 10, 0.45),
+    0 6px 0 #a83d12, 0 12px 18px -6px rgba(180, 60, 20, 0.6);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.primary:hover { background: linear-gradient(#f37b44, #e25a25); }
+.primary:active {
+  transform: translateY(5px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 0 #a83d12, 0 4px 8px -4px rgba(180, 60, 20, 0.6);
+}
+.primary.busy {
+  background: linear-gradient(#d9cdb4, #c7b693);
+  color: var(--ink-soft);
+  cursor: progress;
+  border-color: #b49b74;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 4px 0 #b49b74, 0 8px 14px -6px rgba(40, 28, 15, 0.5);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.primary.busy:active { transform: none; }
+@keyframes pulse { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+
+.credits {
+  margin-top: 18px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  opacity: 0.85;
+}
+.result { margin-top: 22px; display: flex; flex-direction: column; gap: 2px; }
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 12px 6px;
+  border-top: 1px solid rgba(120, 90, 50, 0.25);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.result-row:last-child { border-bottom: 1px solid rgba(120, 90, 50, 0.25); }
+.result-row .mono {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--lcd-glow);
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--lcd-bg);
+  text-shadow: 0 0 8px rgba(255, 180, 90, 0.5);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+@media (max-width: 480px) {
+  .title { font-size: 62px; }
+  .card { padding: 32px 24px 26px; }
+  #progress-wrap { width: 188px; }
+}
